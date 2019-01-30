@@ -44,10 +44,13 @@ function init() {
     this.socket.on('initGame', function(res) {
         gameState = initGame(res);
     });
+    this.socket.on('keepalive', function() {
+        //console.log('received keepalive');
+        socket.emit('stillalive');
+    });
 }
 
 function initGame(res) {
-    console.log(res);
     gameState = JSON.parse(res);
     hand = gameState['hand'];
     table = gameState['table'];
@@ -75,8 +78,6 @@ function paintTable()
 {
     paintHand(hand, INIT_HAND_SIZE, PLYR_AREA_START_Y, PLYR_AREA_START_Y);
     paintHand(table, INIT_TABLE_SIZE, CTR_AREA_START_X, CTR_AREA_START_Y);
-    console.log(otherHands);
-    console.log(deckSize);
     paintPile();
     
 }

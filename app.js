@@ -1,9 +1,12 @@
+const KEEP_ALIVE_INTVL = 20000;
+
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io').listen(http);
 var users = {};
 
+//Handle cookies
 //How to stop someone from connecting?
 io.on('connection', function (socket) {
   if (Object.keys(users).length < 2) {
@@ -11,9 +14,10 @@ io.on('connection', function (socket) {
   	users[socket.id] = {
   		id: socket.id
   	};
-  	console.log(users);
   	socket.emit('currentUsers', users);
   	socket.broadcast.emit('newUser', users[socket.id]);
+  	setTimeout(function() {
+  		keepAlive(socket.id); }, KEEP_ALIVE_INTVL);
   	socket.on('disconnect', function () {
     	disconnectUser(socket.id);
   	});
@@ -25,11 +29,16 @@ io.on('connection', function (socket) {
   if (Object.keys(users).length === 2) {
   	console.log('Begin game');
   	init(users);
-  	console.log("GameStates: " + JSON.stringify(gameStates));
   	Object.keys(users).forEach(function(id) {
   		io.to(id).emit("initGame", JSON.stringify(gameStates[id]));
   	});
   }
+});
+
+io.sockets.on('connection', function(socket) {
+	socket.on('stillalive', function() {
+		//console.log('Received stillalive');
+	});
 });
 
 //How to force someone to disconnect?
@@ -45,6 +54,13 @@ function disconnectUser(id) {
 	console.log('user disconnected: ' + id);
     delete users[id];
     io.emit('disconnect', id);
+}
+
+function keepAlive(id) {
+    setTimeout(function() {
+    	keepAlive(id); }, KEEP_ALIVE_INTVL);
+    //console.log('sending keepalive');
+    io.to(id).emit('keepalive');
 }
 
 app.use(express.static(__dirname + '/public'))
@@ -111,7 +127,6 @@ function PartialPlayer(id, handSize) {
 }
 
 function init(users) {
-	console.log(users);
 	Object.keys(users).forEach(function(id) {
 		gameStates[id] = new GameState(id, [], [], [], 0, [], 
 			INIT_DECK_SIZE, playerOrder[activePlayerIdx]);
