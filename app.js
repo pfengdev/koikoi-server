@@ -30,7 +30,7 @@ io.on('connection', function (socket) {
   	console.log('Begin game');
   	init(users);
   	Object.keys(users).forEach(function(id) {
-  		io.to(id).emit("initGame", JSON.stringify(gameStates[id]));
+  		io.to(id).emit('initGame', JSON.stringify(gameStates[id]));
   	});
   }
 });
@@ -38,6 +38,9 @@ io.on('connection', function (socket) {
 io.sockets.on('connection', function(socket) {
 	socket.on('stillalive', function() {
 		//console.log('Received stillalive');
+	});
+	socket.on('match', function(handIdx, tableIdx) {
+		match(socket.id, handIdx, tableIdx);
 	});
 });
 
@@ -94,7 +97,7 @@ const INIT_HAND_SIZE = 8;
 const INIT_TABLE_SIZE = 8;
 const INIT_DECK_SIZE = 48;
 var deck = [];
-var topIdx;
+var topIdx = 0;
 var hands = {};
 var players = {};
 var playerOrder = [];
@@ -103,9 +106,9 @@ var aiHand = [];
 var table = [];
 var pile = [];
 var points = 0;
-var activePlayerIdx;
+var activePlayerCtr;
 
-function GameState(id, hand, table, pile, points, otherHands, deckSize, activePlayer) {
+function GameState(id, hand, table, pile, points, otherHands, deckSize, activePlayerId) {
 	this.id = id;
 	this.hand = hand;
 	this.table = table;
@@ -113,7 +116,7 @@ function GameState(id, hand, table, pile, points, otherHands, deckSize, activePl
 	this.points = points;
 	this.otherHands = otherHands;
 	this.deckSize = deckSize;
-	this.activePlayer = activePlayer;
+	this.activePlayerId = activePlayerId;
 }
 
 function Card(month, cardNum) {
@@ -121,38 +124,28 @@ function Card(month, cardNum) {
     this.cardNum = cardNum;
 }
 
-function PartialPlayer(id, handSize) {
+function PartialPlayer(id, handSize, pile, points) {
 	this.id = id;
 	this.handSize = handSize;
+	this.pile = pile;
+	this.points = points;
 }
 
 function init(users) {
 	Object.keys(users).forEach(function(id) {
-		gameStates[id] = new GameState(id, [], [], [], 0, [], 
-			INIT_DECK_SIZE, playerOrder[activePlayerIdx]);
+		gameStates[id] = new GameState(id, [], [], [], 0, [], INIT_DECK_SIZE, null);
 	});
 
 	initDeck();
 	shuffleDeck(deck);
 	initPlayerOrder(gameStates);
-	Object.keys(gameStates).forEach(function(id) {
-		gameStates[id].hand = draw(INIT_HAND_SIZE, gameStates[id].hand);
-		Object.keys(gameStates).forEach(function(otherId) {
-			if (id != otherId) {
-				gameStates[id].otherHands.push(new PartialPlayer(otherId, gameStates[otherId].hand.length));
-			}
-		});
-	});
 
-	table = draw(INIT_TABLE_SIZE, table);
-	Object.keys(gameStates).forEach(function(id) {
-		gameStates[id].table = table;
-	});
+	drawForAllPlayers();
+	drawForTable(INIT_TABLE_SIZE);
+	syncGameStates();
 }
 
 function initDeck() {
-    topIdx = 0;
-    deck = [];
     for (let i = 1; i <= NUM_OF_MONTHS; i++) {
         for (let j = 1; j <= NUM_OF_CARDS_PER_MONTH; j++) {
             deck.push(new Card(i, j));
@@ -161,11 +154,12 @@ function initDeck() {
 }
 
 /*Knuth shuffle*/
+//Are there duplicates?? Add tests?
 function shuffle(deck) {
     let currIdx = deck.length;
     let swapIdx;
     let temp;
-    while (currIdx !== 0) {
+    while (currIdx > 0) {
         currIdx--;
         swapIdx = Math.floor(Math.random()*currIdx);
         temp = deck[currIdx];
@@ -184,7 +178,39 @@ function initPlayerOrder(gameStates) {
 		playerOrder.push(id);
 	});
 	playerOrder = shuffle(playerOrder);
-	activePlayerIdx = 0;
+	activePlayerCtr = 0;
+}
+
+//Refactor functions to make more sense
+//If user double clicks there will be a race condition?
+function match(id, handIdx, tableIdx) {
+	if (playerOrder[activePlayerCtr] !== id) {
+		console.log('not the current players turn');
+		return;
+	}
+	if (gameStates[id].hand[handIdx].month === table[tableIdx].month) {
+		matchCards(id, handIdx, tableIdx);
+		drawForPlayer(id, 1);
+		drawForTable(1);
+		changeTurn();
+		syncGameStates();
+		sendUpdatedGameStates();
+	} else {
+		console.log('cards dont match');
+		return;
+	}
+
+}
+
+function matchCards(id, handIdx, tableIdx) {
+	let gameState = gameStates[id];
+	gameState.pile.push(gameState.hand[handIdx]);
+    gameState.pile.push(table[tableIdx]);
+    console.log('before hand splice: ' + JSON.stringify(gameState.hand));
+    gameState.hand.splice(handIdx, 1);
+    console.log('after hand splice: ' + JSON.stringify(gameState.hand));
+	table.splice(tableIdx, 1);
+    gameState.points = updatePoints(gameState.points);
 }
 
 /*Doesn't handle hand size limit. Needs to ask player to discard cards*/
@@ -194,5 +220,50 @@ function draw(numOfCards, handArr) {
     for (let i = 0; i < cards.length; i++) {
     	handArr.push(cards[i]);
     }
-    return handArr;
+}
+
+function drawForAllPlayers() {
+	Object.keys(gameStates).forEach(function(id) {
+		drawForPlayer(id, INIT_HAND_SIZE);
+	});
+}
+
+function drawForPlayer(id, numOfCards) {
+	draw(numOfCards, gameStates[id].hand);
+}
+
+function drawForTable(numOfCards) {
+	draw(numOfCards, table);
+}
+
+function syncGameStates() {
+	Object.keys(gameStates).forEach(function(id) {
+		Object.keys(gameStates).forEach(function(otherId) {
+			if (id != otherId) {
+				gameStates[id].otherHands.push(
+					new PartialPlayer(otherId, gameStates[otherId].hand.length,
+						gameStates[otherId].pile, gameStates[otherId].points));
+			}
+		});
+	});
+	Object.keys(gameStates).forEach(function(id) {
+		gameStates[id].table = table;
+		gameStates[id].activePlayerId = playerOrder[activePlayerCtr];
+		gameStates[id].deckSize = deck.length-topIdx;
+	});
+}
+
+function sendUpdatedGameStates() {
+	Object.keys(gameStates).forEach(function(id) {
+		io.to(id).emit('update', JSON.stringify(gameStates[id]));
+	});
+}
+
+function changeTurn() {
+	activePlayerCtr = (activePlayerCtr+1)%Object.keys(gameStates).length;
+}
+
+function updatePoints(points) 
+{
+    return points + 2;
 }

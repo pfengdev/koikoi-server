@@ -12,6 +12,7 @@ var selectedCardIdx;
 var points;
 var socket;
 var gameState;
+var activePlayerId;
 
 const INIT_HAND_SIZE = 8;
 const INIT_TABLE_SIZE = 8;
@@ -41,8 +42,13 @@ const CARD_IMG_SRC = "../assets/rawcards.jpg";
 
 function init() {
     this.socket = io();
+    //Is it possible for there to be a race condition
     this.socket.on('initGame', function(res) {
         gameState = initGame(res);
+    });
+    this.socket.on('update', function(res) {
+        updateGameState(res);
+        paintTable();
     });
     this.socket.on('keepalive', function() {
         //console.log('received keepalive');
@@ -51,13 +57,7 @@ function init() {
 }
 
 function initGame(res) {
-    gameState = JSON.parse(res);
-    hand = gameState['hand'];
-    table = gameState['table'];
-    deckSize = gameState['deckSize'];
-    pile = gameState['pile'];
-    points = gameState['points'];
-    otherHands = gameState['otherHands'];
+    updateGameState(res);
     canvas = document.getElementById("table");
     if (canvas.getContext) {
         ctx = canvas.getContext('2d');
@@ -65,8 +65,19 @@ function initGame(res) {
         cardImg.src = CARD_IMG_SRC;
         cardImg.onload = paintGame;
     }
-    // canvas.addEventListener("click", onTableClick);
+    canvas.addEventListener("click", onTableClick);
     // canvas.addEventListener("mouseover", onTableMouseover);
+}
+
+function updateGameState(res) {
+    gameState = JSON.parse(res);
+    hand = gameState['hand'];
+    table = gameState['table'];
+    deckSize = gameState['deckSize'];
+    pile = gameState['pile'];
+    points = gameState['points'];
+    otherHands = gameState['otherHands'];
+    activePlayerId = gameState['activePlayerId'];
 }
 
 function paintGame() 
@@ -120,55 +131,51 @@ function paintBlankCard(x, y)
     ctx.fillRect(x, y, CARD_WIDTH, CARD_HEIGHT);
 }
 
-// function onTableClick(event)
-// {
-//     let x = event.clientX;
-//     let y = event.clientY;
+function onTableClick(event)
+{
+    console.log("table clicked");
+    let x = event.clientX;
+    let y = event.clientY;
     
-//     if (insidePlayerArea(x, y) && isMyTurn) {
-//         selectedCardIdx = Math.floor((x-PLYR_AREA_START_X)/CARD_WIDTH);
-//     }
-    
-//     if (selectedCardIdx != null &&
-//         insideCenterArea(x, y)) {
-//             let tableSelectedCardIdx = Math.floor((x-CTR_AREA_START_X)/CARD_WIDTH);
-//             if (matches(hand[selectedCardIdx], table[tableSelectedCardIdx])) {
-//                 console.log("matchCards");
-//                 matchCardsAndUpdate(hand, selectedCardIdx, tableSelectedCardIdx, pile);
-//                 playerDraws();
-//                 updatePoints();
-//                 paintTable();
-//                 doAITurn();
-//             }
-//         selectedCardIdx = null;
-//     }
-// }
+    if (isMyTurn()) {
+        if (insidePlayerArea(x, y)) {
+            console.log("inside player area");
+            selectedCardIdx = Math.floor((x-PLYR_AREA_START_X)/CARD_WIDTH);
+        }
+        
+        if (selectedCardIdx != null &&
+            insideCenterArea(x, y)) {
+                console.log("inside table area");
+                let tableSelectedCardIdx = Math.floor((x-CTR_AREA_START_X)/CARD_WIDTH);
+                console.log(selectedCardIdx);
+                console.log(tableSelectedCardIdx);
+                console.log(hand[selectedCardIdx]);
+                console.log(table[tableSelectedCardIdx]);
+                if (matches(hand[selectedCardIdx], table[tableSelectedCardIdx])) {
+                    matchCards(selectedCardIdx, tableSelectedCardIdx);
+                }
+            selectedCardIdx = null;
+        }
+    }
+}
 
-// function matches(card1, card2)
-// {
-//     //should use prototype and define equals function
-//     return card1.month === card2.month;
-// }
+function matches(card1, card2)
+{
+    console.log("checking if matches");
+    //should use prototype and define equals function
+    return card1.month === card2.month;
+}
 
-// function matchCardsAndUpdate(handArr, selectedIdx, tableSelectedCardIdx, pileArr)
-// {
-//     console.log(selectedIdx);
-//     matchCards(handArr, selectedIdx, tableSelectedCardIdx, pileArr);
-//     changeTurn();
-// }
+function matchCards(selectedIdx, tableSelectedCardIdx)
+{
+    console.log("try to match");
+    this.socket.emit('match', selectedIdx, tableSelectedCardIdx);
+}
 
-// function matchCards(handArr, selectedIdx, tableSelectedCardIdx, pileArr)
-// {
-//     pileArr.push(handArr[selectedIdx]);
-//     pileArr.push(table[tableSelectedCardIdx]);
-//     handArr.splice(selectedIdx, 1);
-//     table.splice(tableSelectedCardIdx, 1);
-// }
-
-// function updatePoints() 
-// {
-//     points += 2;
-// }
+function isMyTurn() {
+    console.log("is my turn?: " + activePlayerId + " ?" + this.socket.id);
+    return activePlayerId === this.socket.id; 
+}
 
 // function playerDraws()
 // {
@@ -211,18 +218,18 @@ function paintBlankCard(x, y)
 //     var y = event.clientY;
 // }
 
-// function insidePlayerArea(x, y) {
-//     return insideArea(x, y, PLYR_AREA_START_X, PLYR_AREA_END_X, PLYR_AREA_START_Y, PLYR_AREA_END_Y);
-// }
+function insidePlayerArea(x, y) {
+    return insideArea(x, y, PLYR_AREA_START_X, PLYR_AREA_END_X, PLYR_AREA_START_Y, PLYR_AREA_END_Y);
+}
 
-// function insideCenterArea(x, y) {
-//     return insideArea(x, y, CTR_AREA_START_X, CTR_AREA_END_X, CTR_AREA_START_Y, CTR_AREA_END_Y);
-// }
+function insideCenterArea(x, y) {
+    return insideArea(x, y, CTR_AREA_START_X, CTR_AREA_END_X, CTR_AREA_START_Y, CTR_AREA_END_Y);
+}
 
-// function insideArea(x, y, startX, endX, startY, endY) {
-//     return (x >= startX && x <= endX && 
-//            y >= startY && y <= endY);
-// }
+function insideArea(x, y, startX, endX, startY, endY) {
+    return (x >= startX && x <= endX && 
+           y >= startY && y <= endY);
+}
 
 function isNotValidMonth(month) {
     return month < 1 || month > 12;
