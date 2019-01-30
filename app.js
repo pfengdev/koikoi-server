@@ -18,6 +18,7 @@ io.on('connection', function (socket) {
   	socket.broadcast.emit('newUser', users[socket.id]);
   	setTimeout(function() {
   		keepAlive(socket.id); }, KEEP_ALIVE_INTVL);
+  	//handle ghost users
   	socket.on('disconnect', function () {
     	disconnectUser(socket.id);
   	});
@@ -215,8 +216,8 @@ function matchCards(id, handIdx, tableIdx) {
 
 /*Doesn't handle hand size limit. Needs to ask player to discard cards*/
 function draw(numOfCards, handArr) {
+    let cards = deck.slice(topIdx, topIdx+numOfCards);
     topIdx += numOfCards;
-    let cards = deck.slice(topIdx-numOfCards, topIdx);
     for (let i = 0; i < cards.length; i++) {
     	handArr.push(cards[i]);
     }
@@ -249,7 +250,7 @@ function syncGameStates() {
 	Object.keys(gameStates).forEach(function(id) {
 		gameStates[id].table = table;
 		gameStates[id].activePlayerId = playerOrder[activePlayerCtr];
-		gameStates[id].deckSize = deck.length-topIdx;
+		gameStates[id].deckSize = INIT_DECK_SIZE-topIdx;
 	});
 }
 

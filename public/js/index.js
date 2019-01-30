@@ -177,26 +177,6 @@ function isMyTurn() {
     return activePlayerId === this.socket.id; 
 }
 
-// function playerDraws()
-// {
-//     addCardToHand(hand);
-// }
-
-// function aiDraws()
-// {
-//     addCardToHand(aiHand);
-// }
-
-// function addCardToHand(handArr)
-// {
-//     handArr.push(draw(1)[0]);
-// }
-
-// function changeTurn()
-// {
-//     isMyTurn = !isMyTurn;
-// }
-
 // /*Temporary code for AI to be implemented on server*/
 // function doAITurn()
 // {
