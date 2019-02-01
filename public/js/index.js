@@ -14,6 +14,7 @@ var socket;
 var gameState;
 var activePlayerId;
 
+//Add underscores to make things private i.e. _password
 const INIT_HAND_SIZE = 8;
 const INIT_TABLE_SIZE = 8;
 const X_OFFSET = 45;
@@ -71,6 +72,7 @@ function initGame(res) {
 
 function updateGameState(res) {
     gameState = JSON.parse(res);
+    console.log(gameState);
     hand = gameState['hand'];
     table = gameState['table'];
     deckSize = gameState['deckSize'];
@@ -93,6 +95,7 @@ function paintTable()
     
 }
 
+//Is it good practice to put this. in front of everything?
 function paintHand(handArr, initSize, startX, startY) {
     for (let i = 0; i < initSize; i++) {
         if (i < handArr.length) {
