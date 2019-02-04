@@ -47,6 +47,10 @@ const PILE_AREA_START_Y = 700;
 const PILE_AREA_END_Y = PILE_AREA_START_Y + CARD_HEIGHT;
 const DECK_X = 200;
 const DECK_Y = BG_HEIGHT/2-CARD_HEIGHT/2;
+const POINTS_X = 700;
+const POINTS_Y = 450;
+const OPP_POINTS_X = 100;
+const OPP_POINTS_Y = 150;
 const CARD_IMG_SRC = "../assets/rawcards.jpg";
 const BG_IMG_SRC = "../assets/woodtexture.jpg";
 const NUM_ALL_IMAGES = 2;
@@ -101,6 +105,7 @@ function paintGame() {
     paintHand();
     paintOpponentHands();
     paintPile();
+    paintPoints();
 }
 
 function paintBackground() {
@@ -167,6 +172,16 @@ function paintCardBack(x, y) {
     //Should I move this to init? And then add a comment for explanation?
     ctx.fillStyle = 'black';
     ctx.fillRect(x, y, CARD_WIDTH, CARD_HEIGHT);
+}
+
+//Only handles one player for now
+function paintPoints() {
+    ctx.fillStyle = 'white';
+    ctx.font = "30px Arial";
+    ctx.fillText(points, POINTS_X, POINTS_Y);
+    otherPlayers.forEach(function(player) {
+        ctx.fillText(player.points, OPP_POINTS_X, OPP_POINTS_Y);
+    });
 }
 
 

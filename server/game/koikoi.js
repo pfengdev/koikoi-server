@@ -2,19 +2,17 @@ let uuidv4 = require('uuid/v4');
 let Deck = require('../hanafuda/deck.js');
 let Card = require('../hanafuda/card.js');
 let Utils = require('../utils/utils.js');
+let Pile = require('./pile.js');
 
 var KoiKoi = function() {
 	const INIT_HAND_SIZE = 8;
 	const INIT_TABLE_SIZE = 8;
 	let deck = new Deck();
-	let hand = [];
 	let hands = {};
 	let players = {};
 	let playerOrder = [];
 	let gameStates = {};
-	let aiHand = [];
 	let table = [];
-	let pile = [];
 	let points = 0;
 	let activePlayerCtr;
 	let id = uuidv4();
@@ -42,7 +40,7 @@ var KoiKoi = function() {
 		KoiKoi.prototype.shuffleDeck();
 
 		Object.keys(users).forEach(function(id) {
-			gameStates[id] = new GameState(id, [], [], [], 0, [], deck.size(), null);
+			gameStates[id] = new GameState(id, [], [], new Pile(), 0, [], deck.size(), null);
 		});
 
 		KoiKoi.prototype.initPlayerOrder(gameStates);
@@ -100,7 +98,7 @@ var KoiKoi = function() {
 	    gameState.pile.push(table[tableIdx]);
 	    gameState.hand.splice(handIdx, 1);
 		table.splice(tableIdx, 1);
-	    gameState.points = KoiKoi.prototype.updatePoints(gameState.points);
+	    KoiKoi.prototype.updatePoints(gameState.id);
 	}
 
 	/*Doesn't handle hand size limit. Needs to ask player to discard cards*/
@@ -134,7 +132,7 @@ var KoiKoi = function() {
 				if (id != otherId) {
 					gameStates[id].otherPlayers.push(
 						new PartialPlayer(otherId, gameStates[otherId].hand.length,
-							gameStates[otherId].pile, gameStates[otherId].points));
+							gameStates[otherId].pile.toArray(), gameStates[otherId].points));
 				}
 			});
 		});
@@ -149,9 +147,9 @@ var KoiKoi = function() {
 		activePlayerCtr = (activePlayerCtr+1)%Object.keys(gameStates).length;
 	}
 
-	KoiKoi.prototype.updatePoints = function(points) 
+	KoiKoi.prototype.updatePoints = function(id) 
 	{
-	    return points + 2;
+	    gameStates[id].points = gameStates[id].pile.getPoints();
 	}
 
 	KoiKoi.prototype.matches = function(card1, card2) {
