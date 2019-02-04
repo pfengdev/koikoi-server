@@ -98,9 +98,7 @@ var KoiKoi = function() {
 		let gameState = gameStates[id];
 		gameState.pile.push(gameState.hand[handIdx]);
 	    gameState.pile.push(table[tableIdx]);
-	    console.log('before hand splice: ' + JSON.stringify(gameState.hand));
 	    gameState.hand.splice(handIdx, 1);
-	    console.log('after hand splice: ' + JSON.stringify(gameState.hand));
 		table.splice(tableIdx, 1);
 	    gameState.points = KoiKoi.prototype.updatePoints(gameState.points);
 	}
