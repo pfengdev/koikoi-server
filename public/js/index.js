@@ -178,9 +178,9 @@ function paintCardBack(x, y) {
 function paintPoints() {
     ctx.fillStyle = 'white';
     ctx.font = "30px Arial";
-    ctx.fillText(points, POINTS_X, POINTS_Y);
+    ctx.fillText(points.total, POINTS_X, POINTS_Y);
     otherPlayers.forEach(function(player) {
-        ctx.fillText(player.points, OPP_POINTS_X, OPP_POINTS_Y);
+        ctx.fillText(player.points.total, OPP_POINTS_X, OPP_POINTS_Y);
     });
 }
 

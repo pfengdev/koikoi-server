@@ -2,7 +2,7 @@ let uuidv4 = require('uuid/v4');
 let Deck = require('../hanafuda/deck.js');
 let Card = require('../hanafuda/card.js');
 let Utils = require('../utils/utils.js');
-let Pile = require('./pile.js');
+let PointCalc = require('./pointcalc.js');
 
 var KoiKoi = function() {
 	const INIT_HAND_SIZE = 8;
@@ -16,6 +16,7 @@ var KoiKoi = function() {
 	let points = 0;
 	let activePlayerCtr;
 	let id = uuidv4();
+	let pointCalc = new PointCalc();
 
 	function GameState(id, hand, table, pile, points, otherPlayers, deckSize, activePlayerId) {
 		this.id = id;
@@ -40,7 +41,7 @@ var KoiKoi = function() {
 		KoiKoi.prototype.shuffleDeck();
 
 		Object.keys(users).forEach(function(id) {
-			gameStates[id] = new GameState(id, [], [], new Pile(), 0, [], deck.size(), null);
+			gameStates[id] = new GameState(id, [], [], [], pointCalc.calculate([]), [], deck.size(), null);
 		});
 
 		KoiKoi.prototype.initPlayerOrder(gameStates);
@@ -132,7 +133,7 @@ var KoiKoi = function() {
 				if (id != otherId) {
 					gameStates[id].otherPlayers.push(
 						new PartialPlayer(otherId, gameStates[otherId].hand.length,
-							gameStates[otherId].pile.toArray(), gameStates[otherId].points));
+							gameStates[otherId].pile, gameStates[otherId].points));
 				}
 			});
 		});
@@ -149,7 +150,7 @@ var KoiKoi = function() {
 
 	KoiKoi.prototype.updatePoints = function(id) 
 	{
-	    gameStates[id].points = gameStates[id].pile.getPoints();
+	    gameStates[id].points = Points.calculate(gameStates[id].pile);
 	}
 
 	KoiKoi.prototype.matches = function(card1, card2) {
