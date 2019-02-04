@@ -17,19 +17,19 @@
 	    Card.prototype.getCardType = function(month, cardNum) {
 	    	if (cardType == null) {
 		    	if (month >= 1 && month <= 3 && cardNum === 2) {
-		    		cardType = POETRY_RIBBON;
+		    		cardType = that.POETRY_RIBBON;
 		    	} else if ((month === 4 || month === 5 || month === 7) && cardNum === 2 ||
 		    				(month === 11 && cardNum === 3)) {
-		    		cardType = RED_RIBBON;
+		    		cardType = that.RED_RIBBON;
 		    	} else if ((month === 6 || month === 9 || month === 10) && cardNum === 2){
-		    		cardType = BLUE_RIBBON;
+		    		cardType = that.BLUE_RIBBON;
 		    	} else if ((month === 2 || (month >= 4 && month <= 7) || month === 9 || month === 10) && cardNum === 1 ||
 		    				((month === 11 || month === 8) && cardNum === 2)) {
-		    		cardType = ANIMAL;
+		    		cardType = that.ANIMAL;
 		    	} else if ((month === 1 || month === 3 || month === 8 || month === 11 || month === 12) && cardNum === 1) {
-		    		cardType = BRIGHT;
+		    		cardType = that.BRIGHT;
 		    	} else {
-		    		cardType = PLAIN;
+		    		cardType = that.PLAIN;
 		    	}
 	    	}
 	    	return cardType;
@@ -49,7 +49,7 @@
 
 	    Card.prototype.isRibbon = function(month, cardNum) {
 	    	return that.cardType === that.BLUE_RIBBON || that.cardType === that.RED_RIBBON ||
-	    		that.cardType === POETRY_RIBBON;
+	    		that.cardType === that.POETRY_RIBBON;
 	    }
 
 	    Card.prototype.isRainMan = function(month, cardNum) {

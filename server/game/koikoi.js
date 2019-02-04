@@ -150,7 +150,7 @@ var KoiKoi = function() {
 
 	KoiKoi.prototype.updatePoints = function(id) 
 	{
-	    gameStates[id].points = Points.calculate(gameStates[id].pile);
+	    gameStates[id].points = pointCalc.calculate(gameStates[id].pile);
 	}
 
 	KoiKoi.prototype.matches = function(card1, card2) {

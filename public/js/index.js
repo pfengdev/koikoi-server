@@ -20,7 +20,7 @@ var numImagesLoaded;
 //how to deal with resizing? ideally don't resize when window changes
 const INIT_HAND_SIZE = 8;
 const INIT_TABLE_SIZE = 8;
-const TABLE_ROW_SIZE = 4;
+const TABLE_COL_SIZE = 2;
 const X_OFFSET = 1;
 const Y_OFFSET = 2;
 const CARD_HEIGHT = 86.5;
@@ -40,8 +40,8 @@ const AI_AREA_END_X = AI_AREA_START_X + CARD_WIDTH*INIT_HAND_SIZE;
 const AI_AREA_START_Y = 900;
 const AI_AREA_END_Y = AI_AREA_START_Y + CARD_HEIGHT;
 const CTR_AREA_START_X = 300;
-const CTR_AREA_END_X = CTR_AREA_START_X + CARD_WIDTH*TABLE_ROW_SIZE;
 const CTR_AREA_START_Y = BG_HEIGHT/2-CARD_HEIGHT/2 - 50;
+const CTR_AREA_END_Y = CTR_AREA_START_Y + TABLE_COL_SIZE*CARD_HEIGHT;
 const PILE_AREA_START_X = 0;
 const PILE_AREA_START_Y = 700;
 const PILE_AREA_END_Y = PILE_AREA_START_Y + CARD_HEIGHT;
@@ -86,16 +86,12 @@ function initGame(res) {
 function updateGameState(res) {
     gameState = JSON.parse(res);
     hand = gameState['hand'];
-    table = convertArrToDoubleArr(gameState['table'], TABLE_ROW_SIZE);
+    table = gameState['table'];
     deckSize = gameState['deckSize'];
     pile = gameState['pile'];
     points = gameState['points'];
     otherPlayers = gameState['otherPlayers'];
     activePlayerId = gameState['activePlayerId'];
-}
-
-function convertArrToDoubleArr(arr, rowSize) {
-    return arr;
 }
 
 function paintGame() {
@@ -114,8 +110,8 @@ function paintBackground() {
 
 function paintTable()  {
     for (let i = 0; i < table.length; i++) {
-        paintCard(table[i], CTR_AREA_START_X + (i%TABLE_ROW_SIZE)*CARD_WIDTH, 
-            CTR_AREA_START_Y + Math.floor(i/TABLE_ROW_SIZE)*CARD_HEIGHT);
+        paintCard(table[i], CTR_AREA_START_X + Math.floor(i/TABLE_COL_SIZE)*CARD_WIDTH, 
+            CTR_AREA_START_Y + Math.floor(i%TABLE_COL_SIZE)*CARD_HEIGHT);
     }
 }
 
@@ -220,7 +216,7 @@ function onTableClick(event)
     let canvasRect = canvas.getBoundingClientRect();
     let x = event.clientX - canvasRect.left;
     let y = event.clientY - canvasRect.top;
-    
+
     if (isMyTurn()) {
         if (insidePlayerArea(x, y)) {
             selectedCardIdx = getSelectedCardIdx(x);
@@ -243,7 +239,9 @@ function getSelectedCardIdx(x) {
 }
 
 function getSelectedTableCardIdx(x, y) {
-    return Math.floor((x-CTR_AREA_START_X)/CARD_WIDTH);
+    let idx = Math.floor((x-CTR_AREA_START_X)/CARD_WIDTH)*TABLE_COL_SIZE;
+    idx = Math.floor((y-CTR_AREA_START_Y)/CARD_HEIGHT)==0 ? idx : idx+1;
+    return idx;
 }
 
 function matches(card1, card2)
@@ -266,8 +264,21 @@ function insidePlayerArea(x, y) {
 }
 
 function insideCenterArea(x, y) {
-    let ctrAreaEndY = CTR_AREA_START_Y + Math.floor(table.length/TABLE_ROW_SIZE)*CARD_HEIGHT;
-    return insideArea(x, y, CTR_AREA_START_X, CTR_AREA_END_X, CTR_AREA_START_Y, ctrAreaEndY);
+    let isInside = false;
+    let tableRowSize = Math.floor(table.length/TABLE_COL_SIZE);
+    let ctrAreaEndX = CTR_AREA_START_X + tableRowSize*CARD_WIDTH;
+    if (table.length == 1) {
+        isInside = insideArea(x, y, CTR_AREA_START_X, ctrAreaEndX, CTR_AREA_START_Y, CTR_AREA_START_Y + CARD_HEIGHT);
+    }
+    else if (table.length % 2 == 0) {
+        //Checking if event was within the rectangular area
+        isInside = insideArea(x, y, CTR_AREA_START_X, ctrAreaEndX, CTR_AREA_START_Y, CTR_AREA_END_Y);
+    } else {
+        //For odd number of cards, checking if event is within rectangular area + the extra card
+        isInside = insideArea(x, y, CTR_AREA_START_X, ctrAreaEndX, CTR_AREA_START_Y, CTR_AREA_END_Y) ||
+                    insideArea(x, y, ctrAreaEndX, ctrAreaEndX + CARD_WIDTH, CTR_AREA_START_Y, CTR_AREA_START_Y + CARD_HEIGHT);
+    }
+    return isInside;
 }
 
 function insideArea(x, y, startX, endX, startY, endY) {
