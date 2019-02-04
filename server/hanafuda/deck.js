@@ -34,6 +34,10 @@ var Deck = function() {
     Deck.prototype.shuffle = function() {
         that.deck = Utils.shuffle(that.deck);
     }
+
+    Deck.prototype.getInitDeckSize = function() {
+        return INIT_DECK_SIZE;
+    }
 }
 
 module.exports = Deck;

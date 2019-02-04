@@ -14,6 +14,8 @@ var socket;
 var gameState;
 var activePlayerId;
 var numImagesLoaded;
+var step;
+var topCard;
 
 //Add underscores to make things private i.e. _password
 //put these in constants js?
@@ -54,6 +56,9 @@ const OPP_POINTS_Y = 150;
 const CARD_IMG_SRC = "../assets/rawcards.jpg";
 const BG_IMG_SRC = "../assets/woodtexture.jpg";
 const NUM_ALL_IMAGES = 2;
+const STEP_WAITING = 0;
+const STEP_MATCH_HAND = 1;
+const STEP_MATCH_DECK = 2;
 
 
 function init() {
@@ -64,7 +69,7 @@ function init() {
     });
     this.socket.on('update', function(res) {
         updateGameState(res);
-        paintTable();
+        paintGame();
     });
     this.socket.on('keepalive', function() {
         //console.log('received keepalive');
@@ -92,6 +97,8 @@ function updateGameState(res) {
     points = gameState['points'];
     otherPlayers = gameState['otherPlayers'];
     activePlayerId = gameState['activePlayerId'];
+    step = gameState['step'];
+    topCard = gameState['topCard'];
 }
 
 function paintGame() {
@@ -116,7 +123,11 @@ function paintTable()  {
 }
 
 function paintDeck() {
-    paintCardBack(DECK_X, DECK_Y);
+    if (topCard === null) {
+        paintCardBack(DECK_X, DECK_Y);
+    } else {
+        paintCard(topCard, DECK_X, DECK_Y);
+    }
 }
 
 //Is it good practice to put this. in front of everything?
@@ -127,7 +138,7 @@ function paintHand() {
 
     //Doing second for loop to draw the box on top of the cards
     for (let i = 0; i < hand.length; i++) {
-        if (selectedCardIdx == i) {
+        if (i === selectedCardIdx) {
             paintSelectBox(PLYR_AREA_START_X + i*CARD_WIDTH, PLYR_AREA_START_Y);
             break;
         }
@@ -216,18 +227,28 @@ function onTableClick(event)
     let canvasRect = canvas.getBoundingClientRect();
     let x = event.clientX - canvasRect.left;
     let y = event.clientY - canvasRect.top;
-
-    if (isMyTurn()) {
+    
+    if (isStepMatchHand()) {
         if (insidePlayerArea(x, y)) {
             selectedCardIdx = getSelectedCardIdx(x);
             paintGame();
         }
-        
+
         if (selectedCardIdx != null &&
             insideCenterArea(x, y)) {
                 let tableSelectedCardIdx = getSelectedTableCardIdx(x, y);
-                if (matches(hand[selectedCardIdx], table[tableSelectedCardIdx])) {
-                    matchCards(selectedCardIdx, tableSelectedCardIdx);
+                if (isHandMatching(tableSelectedCardIdx, selectedCardIdx)) {
+                    sendMatchCards(tableSelectedCardIdx, selectedCardIdx);
+                }
+            selectedCardIdx = null;
+        }
+    }
+
+    if (isStepMatchDeck()) {
+        if (insideCenterArea(x, y)) {
+                let tableSelectedCardIdx = getSelectedTableCardIdx(x, y);
+                if (isDeckMatching(tableSelectedCardIdx)) {
+                    sendMatchCards(tableSelectedCardIdx);
                 }
             selectedCardIdx = null;
         }
@@ -244,19 +265,37 @@ function getSelectedTableCardIdx(x, y) {
     return idx;
 }
 
-function matches(card1, card2)
+function isHandMatching(tableIdx, handIdx)
 {
     //should use prototype and define equals function
-    return card1.month === card2.month;
+    return hand[handIdx].month === table[tableIdx].month;
 }
 
-function matchCards(selectedIdx, tableSelectedCardIdx)
+function isDeckMatching(tableIdx)
 {
-    this.socket.emit('match', selectedIdx, tableSelectedCardIdx);
+    //should use prototype and define equals function
+    return topCard.month === table[tableIdx].month;
+}
+
+function sendMatchCards(tableSelectedCardIdx, selectedIdx)
+{
+    if (step === STEP_MATCH_HAND) {
+        this.socket.emit('matchHand', tableSelectedCardIdx, selectedIdx);
+    } else if (step === STEP_MATCH_DECK) {
+        this.socket.emit('matchDeck', tableSelectedCardIdx);
+    }
 }
 
 function isMyTurn() {
-    return activePlayerId === this.socket.id; 
+    return activePlayerId === this.socket.id
+}
+
+function isStepMatchHand() {
+    return isMyTurn() && step === STEP_MATCH_HAND; 
+}
+
+function isStepMatchDeck() {
+    return isMyTurn() && step === STEP_MATCH_DECK; 
 }
 
 function insidePlayerArea(x, y) {

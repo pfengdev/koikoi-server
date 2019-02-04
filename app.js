@@ -51,15 +51,24 @@ io.sockets.on('connection', function(socket) {
 	socket.on('stillalive', function() {
 		//console.log('Received stillalive');
 	});
-	socket.on('match', function(handIdx, tableIdx) {
-		console.log("on match");
+	socket.on('matchHand', function(tableIdx, handIdx) {
+		//console.log("on match");
 		let gameId = usersToGames[socket.id];
-		console.log("got gameid");
+		//console.log("got gameid");
 		let selectedGame = games[gameId];
-		console.log('gameId: ' + gameId + " selectedGame: " + selectedGame);
-		selectedGame.match(socket.id, handIdx, tableIdx);
+		//console.log('gameId: ' + gameId + " selectedGame: " + selectedGame);
+		selectedGame.matchHand(socket.id, tableIdx, handIdx);
 		sendUpdatedGameStates('update', selectedGame);
 	});
+  socket.on('matchDeck', function(tableIdx) {
+    //console.log("on match");
+    let gameId = usersToGames[socket.id];
+    //console.log("got gameid");
+    let selectedGame = games[gameId];
+    //console.log('gameId: ' + gameId + " selectedGame: " + selectedGame);
+    selectedGame.matchDeck(socket.id, tableIdx);
+    sendUpdatedGameStates('update', selectedGame);
+  });
 });
 
 //How to force someone to disconnect?
