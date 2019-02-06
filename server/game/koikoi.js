@@ -4,7 +4,6 @@ const Card = require('../hanafuda/card.js');
 const Utils = require('../utils/utils.js');
 const PointCalc = require('./pointcalc.js');
 
-//concat array
 var KoiKoi = function() {
 	const INIT_HAND_SIZE = 8;
 	const INIT_TABLE_SIZE = 8;
@@ -85,7 +84,6 @@ var KoiKoi = function() {
 		activePlayerCtr = 0;
 	}
 
-	//Refactor functions to make more sense
 	//If user double clicks there will be a race condition?
 	var matchHand = function(id, tableIdx, handIdx) {
 		if (playerOrder[activePlayerCtr] !== id ||
@@ -139,7 +137,7 @@ var KoiKoi = function() {
 		updatePoints(gameState.id);
 	}
 
-	/*Doesn't handle hand size limit. Needs to ask player to discard cards*/
+	/*Is there a hand size limit? If so, then needs to ask player to discard cards*/
 	var draw = function(numOfCards, handArr) {
 		let arr = handArr.slice();
 	    let cards = deck.pop(numOfCards);

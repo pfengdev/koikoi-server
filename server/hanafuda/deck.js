@@ -3,11 +3,10 @@
 const Card = require('./card.js');
 
 var Deck = function() {
-    //How to define as property of the "class"?
-    var that = this;
     const NUM_OF_MONTHS = 12;
     const NUM_OF_CARDS_PER_MONTH = 4;
     const INIT_SIZE = 48;
+    var that = this;
     var deck = [];
     var topIdx = 0;
 

@@ -2,8 +2,8 @@
 let Card = require('../hanafuda/card.js');
 
 var PointCalc = function() {
-	//Minimum number of plain cards to score a point
 	var that = this;
+	//Minimum number of plain cards to score a point
 	var PLAIN_MIN = 10;
 	var ANIMAL_MIN = 5;
 	var RIBBON_MIN = 5;

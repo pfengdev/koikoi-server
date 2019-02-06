@@ -1,4 +1,5 @@
 var Card = function(month, cardNum) {
+	//Is there a way to mimic private enum?
 	const POETRY_RIBBON = "Poetry Ribbon";
     const RED_RIBBON = "Red Ribbon";
     const BLUE_RIBBON = "Blue Ribbon";
@@ -8,7 +9,6 @@ var Card = function(month, cardNum) {
     var month = month;
     var cardNum = cardNum;
     var cardType = determineCardType();
-    //Is there a way to mimic private enum?
 
     function determineCardType() {
     	if (month >= 1 && month <= 3 && cardNum === 2) {
