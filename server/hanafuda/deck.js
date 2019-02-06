@@ -1,43 +1,57 @@
 //Hanafuda is the name of the traditional Japanese set of playing cards
 //that can be used to play KoiKoi and other games
 let Card = require('./card.js');
-let Utils = require('../utils/utils.js')
 
 var Deck = function() {
     //How to define as property of the "class"?
-    let that = this;
+    var that = this;
     const NUM_OF_MONTHS = 12;
     const NUM_OF_CARDS_PER_MONTH = 4;
-    const INIT_DECK_SIZE = 48;
-    this.deck = [];
-    this.topIdx = 0;
+    const INIT_SIZE = 48;
+    var deck = [];
+    var topIdx = 0;
 
-    Deck.prototype.init = function() {
+    var init = function() {
         for (let i = 1; i <= NUM_OF_MONTHS; i++) {
             for (let j = 1; j <= NUM_OF_CARDS_PER_MONTH; j++) {
-                that.deck.push(new Card(i, j));
+                deck.push(new Card(i, j));
             }
         }
-        that.topIdx = 0;
+        topIdx = 0;
     }
 
-    Deck.prototype.pop = function(numOfCards) {
-        let cards = that.deck.slice(that.topIdx, that.topIdx+numOfCards);
-        that.topIdx += numOfCards;
+    var pop = function(numOfCards) {
+        let cards = deck.slice(topIdx, topIdx+numOfCards);
+        topIdx += numOfCards;
         return cards;
     }
 
-    Deck.prototype.size = function() {
-        return that.deck.length;
+    var size = function() {
+        return deck.length;
     }
 
-    Deck.prototype.shuffle = function() {
-        that.deck = Utils.shuffle(that.deck);
+    /*Knuth shuffle*/
+    var shuffle = function() {
+        let currIdx = deck.length;
+        let swapIdx;
+        let temp;
+        while (currIdx > 0) {
+            currIdx--;
+            swapIdx = Math.floor(Math.random()*currIdx);
+            temp = deck[currIdx];
+            deck[currIdx] = deck[swapIdx];
+            deck[swapIdx] = temp;
+        }
+        return deck;
     }
 
-    Deck.prototype.getInitDeckSize = function() {
-        return INIT_DECK_SIZE;
-    }
+    return {
+        init: init,
+        pop: pop,
+        size: size,
+        shuffle: shuffle,
+        INIT_SIZE: INIT_SIZE
+    };
 }
 
 module.exports = Deck;

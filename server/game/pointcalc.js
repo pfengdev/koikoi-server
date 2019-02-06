@@ -3,34 +3,43 @@ let Card = require('../hanafuda/card.js');
 
 var PointCalc = function() {
 	//Minimum number of plain cards to score a point
-	let that = this;
-	this.PLAIN_MIN = 10;
-	this.ANIMAL_MIN = 5;
-	this.RIBBON_MIN = 5;
-	this.SPC_RIBBON_MIN = 3;
-	this.SPC_RIBBON_POINTS = 6;
-	this.INO_SHIKA_CHO_POINTS = 5;
+	var that = this;
+	var PLAIN_MIN = 10;
+	var ANIMAL_MIN = 5;
+	var RIBBON_MIN = 5;
+	var SPC_RIBBON_MIN = 3;
+	var SPC_RIBBON_POINTS = 6;
+	var INO_SHIKA_CHO_POINTS = 5;
+	//Put these in some kind of shared consts folder?
+	var PLAIN = "plain";
+	var ANIMAL = "animal";
+	var RIBBON = "ribbon";
+	var BLUE_RIBBON = "blueRibbon";
+	var POETRY_RIBBON = "poetryRibbon";
+	var INO_SHIKA_CHO = "inoShikaCho";
+	var BRIGHT = "bright";
+	var TOTAL = "total";
 
-	PointCalc.prototype.calculate = function(cards) {
+	var calculate = function(cards) {
 		let value = {};
-		let cardTypes = PointCalc.prototype.countCardTypes(cards);
-		value["plain"] = PointCalc.prototype.calculatePlains(cardTypes.plain);
-		value["animal"] = PointCalc.prototype.calculateAnimals(cardTypes.animal);
-		value["ribbon"] = PointCalc.prototype.calculateRibbons(cardTypes.ribbon);
-		value["blueRibbon"] = PointCalc.prototype.calculateSpecialRibbons(cardTypes.blueRibbon);
-		value["poetryRibbon"] = PointCalc.prototype.calculateSpecialRibbons(cardTypes.poetryRibbon);
-		value["inoShikaCho"] = PointCalc.prototype.calculateInoShikaCho(cardTypes.inoShikaCho);
-		value["bright"] = PointCalc.prototype.calculateBrights(cardTypes.bright, cardTypes.rainMan);
-		value["total"] = 0;
+		let cardTypes =  countCardTypes(cards);
+		value[PLAIN] = calculatePlains(cardTypes.plain);
+		value[ANIMAL] = calculateAnimals(cardTypes.animal);
+		value[RIBBON] = calculateRibbons(cardTypes.ribbon);
+		value[BLUE_RIBBON] = calculateSpecialRibbons(cardTypes.blueRibbon);
+		value[POETRY_RIBBON] = calculateSpecialRibbons(cardTypes.poetryRibbon);
+		value[INO_SHIKA_CHO] = calculateInoShikaCho(cardTypes.inoShikaCho);
+		value[BRIGHT] = calculateBrights(cardTypes.bright, cardTypes.rainMan);
+		value[TOTAL] = 0;
 		Object.keys(value).forEach(function(type) {
-			if (type !== "total") {
-				value["total"] += value[type];
+			if (type !== TOTAL) {
+				value[TOTAL] += value[type];
 			}
 		});
 		return value;
 	}
 
-	PointCalc.prototype.countCardTypes = function(cards) {
+	var countCardTypes = function(cards) {
 		let plain = 0;
 		let ribbon = 0;
 		let poetryRibbon = 0;
@@ -42,15 +51,15 @@ var PointCalc = function() {
 		let rainMan = false;
 
 		cards.forEach(function(card) {
-			if (card.cardType === card.PLAIN) {
+			if (card.getCardType() === card.PLAIN) {
 				plain++;
-			} else if (card.cardType === card.POETRY_RIBBON) {
+			} else if (card.getCardType() === card.POETRY_RIBBON) {
 				poetryRibbon++;
-			} else if (card.cardType === card.BLUE_RIBBON) {
+			} else if (card.getCardType() === card.BLUE_RIBBON) {
 				blueRibbon++;
-			} else if (card.cardType === card.ANIMAL) {
+			} else if (card.getCardType() === card.ANIMAL) {
 				animal++;
-			} else if (card.cardType === card.BRIGHT) {
+			} else if (card.getCardType() === card.BRIGHT) {
 				bright++;
 			}
 
@@ -70,6 +79,7 @@ var PointCalc = function() {
 				ribbon++;
 			}
 		});
+		//how to get around the shorthand notation?
 		return {
 			"plain": plain,
 			"ribbon": ribbon,
@@ -82,15 +92,15 @@ var PointCalc = function() {
 		};
 	}
 
-	PointCalc.prototype.calculatePlains = function(num) {
-		return PointCalc.prototype.calculateGeneric(num, that.PLAIN_MIN);
+	var calculatePlains = function(num) {
+		return calculateGeneric(num, that.PLAIN_MIN);
 	}
 
-	PointCalc.prototype.calculateAnimals = function(num) {
-		return PointCalc.prototype.calculateGeneric(num, that.ANIMAL_MIN);
+	var calculateAnimals = function(num) {
+		return calculateGeneric(num, that.ANIMAL_MIN);
 	}
 
-	PointCalc.prototype.calculateGeneric = function(num, min) {
+	var calculateGeneric = function(num, min) {
 		let points = 0;
 		if (num >= min) {
 			points = points + num-min + 1;
@@ -98,18 +108,18 @@ var PointCalc = function() {
 		return points;
 	}
 
-	PointCalc.prototype.calculateRibbons = function(num) {
-		return PointCalc.prototype.calculateGeneric(num, that.RIBBON_MIN);
+	var calculateRibbons = function(num) {
+		return calculateGeneric(num, that.RIBBON_MIN);
 	}
 
-	PointCalc.prototype.calculateSpecialRibbons = function(num) {
+	var calculateSpecialRibbons = function(num) {
 		if (num === that.SPC_RIBBON_MIN) {
 			return that.SPC_RIBBON_POINTS;
 		}
 		return 0;
 	}
 
-	PointCalc.prototype.calculateBrights = function(num, rainMan) {
+	var calculateBrights = function(num, rainMan) {
 		if (num === 5) {
 			return 15;
 		} else if (num === 4 && !rainMan) {
@@ -122,8 +132,12 @@ var PointCalc = function() {
 		return 0;
 	}
 
-	PointCalc.prototype.calculateInoShikaCho = function(inoShikaCho) {
+	var calculateInoShikaCho = function(inoShikaCho) {
 		return inoShikaCho ? that.INO_SHIKA_CHO_POINTS : 0;
+	}
+
+	return {
+		calculate : calculate
 	}
 }
 

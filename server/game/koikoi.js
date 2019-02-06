@@ -4,6 +4,7 @@ let Card = require('../hanafuda/card.js');
 let Utils = require('../utils/utils.js');
 let PointCalc = require('./pointcalc.js');
 
+//concat array
 var KoiKoi = function() {
 	const INIT_HAND_SIZE = 8;
 	const INIT_TABLE_SIZE = 8;
@@ -22,6 +23,7 @@ var KoiKoi = function() {
 	let activePlayerCtr;
 	let id = uuidv4();
 	let pointCalc = new PointCalc();
+	let utils = new Utils();
 
 
 
@@ -33,7 +35,7 @@ var KoiKoi = function() {
 		this.pile = [];
 		this.points = pointCalc.calculate([]);
 		this.otherPlayers = [];
-		this.deckSize = deck.getInitDeckSize();
+		this.deckSize = deck.INIT_SIZE;
 		this.activePlayerId = null;
 		this.step = STEP_WAITING;
 		this.topCard = null;
@@ -46,56 +48,56 @@ var KoiKoi = function() {
 		this.points = points;
 	}
 
-	KoiKoi.prototype.init = function(users) {
-		KoiKoi.prototype.initDeck();
-		KoiKoi.prototype.shuffleDeck();
+	var init = function(users) {
+		initDeck();
+		shuffleDeck();
 
 		Object.keys(users).forEach(function(id) {
 			gameStates[id] = new GameState(id);
 		});
 
-		KoiKoi.prototype.initPlayerOrder(gameStates);
+		initPlayerOrder(gameStates);
 		gameStates[playerOrder[activePlayerCtr]].step = STEP_MATCH_HAND;
 
-		KoiKoi.prototype.drawForAllPlayers();
-		KoiKoi.prototype.drawForTable(INIT_TABLE_SIZE);
-		KoiKoi.prototype.syncGameStates();
+		drawForAllPlayers();
+		drawForTable(INIT_TABLE_SIZE);
+		syncGameStates();
 	}
 
-	KoiKoi.prototype.initDeck = function() {
+	var initDeck = function() {
 	    deck = new Deck();
 	    deck.init();
 	}
 
-	KoiKoi.prototype.resetDeck = function() {
+	var resetDeck = function() {
 		deck.init();
 	}
 
-	KoiKoi.prototype.shuffleDeck = function() {
+	var shuffleDeck = function() {
 		deck.shuffle();
 	}
 
-	KoiKoi.prototype.initPlayerOrder = function(gameStates) {
+	var initPlayerOrder = function(gameStates) {
 		Object.keys(gameStates).forEach(function(id) {
 			playerOrder.push(id);
 		});
-		playerOrder = Utils.shuffle(playerOrder);
+		playerOrder = utils.shuffle(playerOrder);
 		activePlayerCtr = 0;
 	}
 
 	//Refactor functions to make more sense
 	//If user double clicks there will be a race condition?
-	KoiKoi.prototype.matchHand = function(id, tableIdx, handIdx) {
+	var matchHand = function(id, tableIdx, handIdx) {
 		if (playerOrder[activePlayerCtr] !== id ||
 			gameStates[id].step !== STEP_MATCH_HAND) {
 			console.log('not the current players turn or wrong step');
 			return;
 		}
 		
-		if (KoiKoi.prototype.matches(table[tableIdx], gameStates[id].hand[handIdx])) {
-			KoiKoi.prototype.matchHandHelper(id, tableIdx, handIdx);
-			KoiKoi.prototype.setStepToMatchDeck(id);
-			KoiKoi.prototype.syncGameStates();
+		if (matches(table[tableIdx], gameStates[id].hand[handIdx])) {
+			matchHandHelper(id, tableIdx, handIdx);
+			setStepToMatchDeck(id);
+			syncGameStates();
 		} else {
 			console.log('cards dont match, hand: ' + JSON.stringify(gameStates[id].hand[handIdx]) + "table:" + JSON.stringify(table[tableIdx]));
 			return;
@@ -103,66 +105,63 @@ var KoiKoi = function() {
 
 	}
 
-	KoiKoi.prototype.matchHandHelper = function(id, tableIdx, handIdx) {
+	var matchHandHelper = function(id, tableIdx, handIdx) {
 		let gameState = gameStates[id];
 		gameState.pile.push(gameState.hand[handIdx]);
 	    gameState.pile.push(table[tableIdx]);
 	    gameState.hand.splice(handIdx, 1);
 		table.splice(tableIdx, 1);
-		KoiKoi.prototype.updatePoints(gameState.id);
+		updatePoints(gameState.id);
 	}
 
-	KoiKoi.prototype.matchDeck = function(id, tableIdx) {
+	var matchDeck = function(id, tableIdx) {
 		if (playerOrder[activePlayerCtr] !== id ||
 			gameStates[id].step !== STEP_MATCH_DECK) {
 			console.log('not the current players turn or wrong step');
 			return;
 		}
 
-		if (KoiKoi.prototype.matches(topCard, table[tableIdx])) {
-			KoiKoi.prototype.matchDeckHelper(id, tableIdx);
-			KoiKoi.prototype.changeTurn();
-			KoiKoi.prototype.syncGameStates();
+		if (matches(topCard, table[tableIdx])) {
+			matchDeckHelper(id, tableIdx);
+			changeTurn();
+			syncGameStates();
 		} else {
 			console.log('cards dont match, hand: ' + JSON.stringify(gameStates[id].hand[handIdx]) + "table:" + JSON.stringify(table[tableIdx]));
 			return;
 		}
 	}
 
-	KoiKoi.prototype.matchDeckHelper = function(id, tableIdx) {
+	var matchDeckHelper = function(id, tableIdx) {
 		let gameState = gameStates[id];
 		gameState.pile.push(topCard);
 	    gameState.pile.push(table[tableIdx]);
 		table.splice(tableIdx, 1);
-		KoiKoi.prototype.updatePoints(gameState.id);
+		updatePoints(gameState.id);
 	}
 
 	/*Doesn't handle hand size limit. Needs to ask player to discard cards*/
-	KoiKoi.prototype.draw = function(numOfCards, handArr) {
+	var draw = function(numOfCards, handArr) {
 		let arr = handArr.slice();
 	    let cards = deck.pop(numOfCards);
-	    cards.forEach(function(card) {
-	    	arr.push(card);
-	    });
-	    return arr;
+	    return arr.concat(cards);
 
 	}
 
-	KoiKoi.prototype.drawForAllPlayers = function() {
+	var drawForAllPlayers = function() {
 		Object.keys(gameStates).forEach(function(id) {
-			KoiKoi.prototype.drawForPlayer(id, INIT_HAND_SIZE);
+			drawForPlayer(id, INIT_HAND_SIZE);
 		});
 	}
 
-	KoiKoi.prototype.drawForPlayer = function(id, numOfCards) {
-		gameStates[id].hand = KoiKoi.prototype.draw(numOfCards, gameStates[id].hand);
+	var drawForPlayer = function(id, numOfCards) {
+		gameStates[id].hand = draw(numOfCards, gameStates[id].hand);
 	}
 
-	KoiKoi.prototype.drawForTable = function(numOfCards) {
-		table = KoiKoi.prototype.draw(numOfCards, table);
+	var drawForTable = function(numOfCards) {
+		table = draw(numOfCards, table);
 	}
 
-	KoiKoi.prototype.syncGameStates = function() {
+	var syncGameStates = function() {
 		Object.keys(gameStates).forEach(function(id) {
 			Object.keys(gameStates).forEach(function(otherId) {
 				if (id != otherId) {
@@ -180,7 +179,7 @@ var KoiKoi = function() {
 		});
 	}
 
-	KoiKoi.prototype.setStepToMatchHand = function(id) {
+	var setStepToMatchHand = function(id) {
 		if (gameStates[id].step === STEP_WAITING) {
 			gameStates[id].step = STEP_MATCH_HAND;
 		} else {
@@ -188,7 +187,7 @@ var KoiKoi = function() {
 		}
 	}
 
-	KoiKoi.prototype.setStepToWaiting = function(id) {
+	var setStepToWaiting = function(id) {
 		if (gameStates[id].step === STEP_MATCH_DECK) {
 			gameStates[id].step = STEP_WAITING;
 			topCard = null;
@@ -197,7 +196,7 @@ var KoiKoi = function() {
 		}
 	}
 
-	KoiKoi.prototype.setStepToMatchDeck = function(id) {
+	var setStepToMatchDeck = function(id) {
 		if (gameStates[id].step === STEP_MATCH_HAND) {
 			gameStates[id].step = STEP_MATCH_DECK;
 			topCard = deck.pop(1)[0];
@@ -206,24 +205,31 @@ var KoiKoi = function() {
 		}
 	}
 
-	KoiKoi.prototype.changeTurn = function() {
-		KoiKoi.prototype.setStepToWaiting(playerOrder[activePlayerCtr]);
+	var changeTurn = function() {
+		setStepToWaiting(playerOrder[activePlayerCtr]);
 		activePlayerCtr = (activePlayerCtr+1)%Object.keys(gameStates).length;
-		KoiKoi.prototype.setStepToMatchHand(playerOrder[activePlayerCtr]);
+		setStepToMatchHand(playerOrder[activePlayerCtr]);
 	}
 
-	KoiKoi.prototype.updatePoints = function(id) 
+	var updatePoints = function(id) 
 	{
 	    gameStates[id].points = pointCalc.calculate(gameStates[id].pile);
 	}
 
-	KoiKoi.prototype.matches = function(card1, card2) {
+	var matches = function(card1, card2) {
 		return card1.month === card2.month;
 	}
 
-	KoiKoi.prototype.getGameStatesFor= function(id) {
+	var getGameStatesFor = function(id) {
 		return JSON.stringify(gameStates[id]);
 	}
+
+	return {
+		init : init,
+		matchHand : matchHand,
+		matchDeck : matchDeck,
+		getGameStatesFor: getGameStatesFor
+	};
 }
 
 module.exports = KoiKoi;

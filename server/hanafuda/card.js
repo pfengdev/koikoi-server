@@ -1,60 +1,83 @@
 	var Card = function(month, cardNum) {
-		let that = this;
-	    this.month = month;
-	    this.cardNum = cardNum;
-	    //how to make this private
-	    this.cardType = null;
+	    var month = month;
+	    var cardNum = cardNum;
+	    var cardType = null;
+	    //Is there a way to mimic private enum?
 	    const POETRY_RIBBON = "Poetry Ribbon";
 	    const RED_RIBBON = "Red Ribbon";
 	    const BLUE_RIBBON = "Blue Ribbon";
 	    const ANIMAL = "Animal";
 	    const BRIGHT = "Bright";
 	    const PLAIN = "Plain";
-
-
-	    //Is there a way to mimic private enum?
-	    //make a private function?
-	    Card.prototype.getCardType = function(month, cardNum) {
-	    	if (cardType == null) {
+	    
+	    var getCardType = function() {
+	    	if (that.cardType == null) {
 		    	if (month >= 1 && month <= 3 && cardNum === 2) {
-		    		cardType = POETRY_RIBBON;
+		    		that.cardType = that.POETRY_RIBBON;
 		    	} else if ((month === 4 || month === 5 || month === 7) && cardNum === 2 ||
 		    				(month === 11 && cardNum === 3)) {
-		    		cardType = that.RED_RIBBON;
+		    		that.cardType = that.RED_RIBBON;
 		    	} else if ((month === 6 || month === 9 || month === 10) && cardNum === 2){
-		    		cardType = BLUE_RIBBON;
+		    		that.cardType = that.BLUE_RIBBON;
 		    	} else if ((month === 2 || (month >= 4 && month <= 7) || month === 9 || month === 10) && cardNum === 1 ||
 		    				((month === 11 || month === 8) && cardNum === 2)) {
-		    		cardType = ANIMAL;
+		    		that.cardType = that.ANIMAL;
 		    	} else if ((month === 1 || month === 3 || month === 8 || month === 11 || month === 12) && cardNum === 1) {
-		    		cardType = BRIGHT;
+		    		that.cardType = that.BRIGHT;
 		    	} else {
-		    		cardType = PLAIN;
+		    		that.cardType = that.PLAIN;
 		    	}
 	    	}
-	    	return cardType;
+	    	return that.cardType;
 	    }
 
-	    Card.prototype.isIno = function(month, cardNum) {
+	    var getMonth = function() {
+	    	return month;
+	    }
+
+	    var getCardNum = function() {
+	    	return cardNum;
+	    }
+
+	    //make static
+	    var isIno = function() {
 	    	return month === 7 && cardNum === 1;
 	    }
 
-	    Card.prototype.isShika = function(month, cardNum) {
+	    var isShika = function() {
 	    	return month === 10 && cardNum === 1;
 	    }
 
-	    Card.prototype.isCho = function(month, cardNum) {
+	    var isCho = function() {
 	    	return month === 6 && cardNum === 1;
 	    }
 
-	    Card.prototype.isRibbon = function(month, cardNum) {
+	    var isRibbon = function() {
 	    	return that.cardType === BLUE_RIBBON || that.cardType === RED_RIBBON ||
 	    		that.cardType === POETRY_RIBBON;
 	    }
 
-	    Card.prototype.isRainMan = function(month, cardNum) {
+	    var isRainMan = function() {
 	    	return month === 11 && cardNum === 1;
 	    }
+
+	    //hide implementation i.e. have some toJson for client side
+	    return {
+	    	getCardType : getCardType,
+	    	month : month,
+	    	cardNum : cardNum,
+	    	isIno : isIno,
+	    	isShika : isShika,
+	    	isCho : isCho,
+	    	isRibbon : isRibbon,
+	    	isRainMan : isRainMan,
+	    	PLAIN : PLAIN,
+	    	POETRY_RIBBON : POETRY_RIBBON,
+	    	RED_RIBBON : RED_RIBBON,
+	    	BLUE_RIBBON : BLUE_RIBBON,
+	    	ANIMAL : ANIMAL,
+	    	BRIGHT : BRIGHT
+	    };
 	}
 
 	module.exports = Card;
