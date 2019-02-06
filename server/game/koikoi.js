@@ -1,8 +1,8 @@
-let uuidv4 = require('uuid/v4');
-let Deck = require('../hanafuda/deck.js');
-let Card = require('../hanafuda/card.js');
-let Utils = require('../utils/utils.js');
-let PointCalc = require('./pointcalc.js');
+const uuidv4 = require('uuid/v4');
+const Deck = require('../hanafuda/deck.js');
+const Card = require('../hanafuda/card.js');
+const Utils = require('../utils/utils.js');
+const PointCalc = require('./pointcalc.js');
 
 //concat array
 var KoiKoi = function() {

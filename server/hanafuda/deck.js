@@ -1,6 +1,6 @@
 //Hanafuda is the name of the traditional Japanese set of playing cards
 //that can be used to play KoiKoi and other games
-let Card = require('./card.js');
+const Card = require('./card.js');
 
 var Deck = function() {
     //How to define as property of the "class"?
