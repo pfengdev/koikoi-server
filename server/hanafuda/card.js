@@ -1,34 +1,35 @@
 var Card = function(month, cardNum) {
-    var month = month;
-    var cardNum = cardNum;
-    var cardType = null;
-    //Is there a way to mimic private enum?
-    const POETRY_RIBBON = "Poetry Ribbon";
+	const POETRY_RIBBON = "Poetry Ribbon";
     const RED_RIBBON = "Red Ribbon";
     const BLUE_RIBBON = "Blue Ribbon";
     const ANIMAL = "Animal";
     const BRIGHT = "Bright";
     const PLAIN = "Plain";
+    var month = month;
+    var cardNum = cardNum;
+    var cardType = determineCardType();
+    //Is there a way to mimic private enum?
+
+    function determineCardType() {
+    	if (month >= 1 && month <= 3 && cardNum === 2) {
+    		cardType = POETRY_RIBBON;
+    	} else if ((month === 4 || month === 5 || month === 7) && cardNum === 2 ||
+    				(month === 11 && cardNum === 3)) {
+    		cardType = RED_RIBBON;
+    	} else if ((month === 6 || month === 9 || month === 10) && cardNum === 2){
+    		cardType = BLUE_RIBBON;
+    	} else if ((month === 2 || (month >= 4 && month <= 7) || month === 9 || month === 10) && cardNum === 1 ||
+    				((month === 11 || month === 8) && cardNum === 2)) {
+    		cardType = ANIMAL;
+    	} else if ((month === 1 || month === 3 || month === 8 || month === 11 || month === 12) && cardNum === 1) {
+    		cardType = BRIGHT;
+    	} else {
+    		cardType = PLAIN;
+    	}
+    }
     
     var getCardType = function() {
-    	if (that.cardType == null) {
-	    	if (month >= 1 && month <= 3 && cardNum === 2) {
-	    		that.cardType = that.POETRY_RIBBON;
-	    	} else if ((month === 4 || month === 5 || month === 7) && cardNum === 2 ||
-	    				(month === 11 && cardNum === 3)) {
-	    		that.cardType = that.RED_RIBBON;
-	    	} else if ((month === 6 || month === 9 || month === 10) && cardNum === 2){
-	    		that.cardType = that.BLUE_RIBBON;
-	    	} else if ((month === 2 || (month >= 4 && month <= 7) || month === 9 || month === 10) && cardNum === 1 ||
-	    				((month === 11 || month === 8) && cardNum === 2)) {
-	    		that.cardType = that.ANIMAL;
-	    	} else if ((month === 1 || month === 3 || month === 8 || month === 11 || month === 12) && cardNum === 1) {
-	    		that.cardType = that.BRIGHT;
-	    	} else {
-	    		that.cardType = that.PLAIN;
-	    	}
-    	}
-    	return that.cardType;
+    	return cardType;
     }
 
     var getMonth = function() {
@@ -53,8 +54,8 @@ var Card = function(month, cardNum) {
     }
 
     var isRibbon = function() {
-    	return that.cardType === BLUE_RIBBON || that.cardType === RED_RIBBON ||
-    		that.cardType === POETRY_RIBBON;
+    	return cardType === BLUE_RIBBON || cardType === RED_RIBBON ||
+    		cardType === POETRY_RIBBON;
     }
 
     var isRainMan = function() {
