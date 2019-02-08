@@ -31,7 +31,7 @@ function init() {
         paintGame();
     });
     this.socket.on('keepalive', function() {
-        //console.log('received keepalive');
+        console.debug('received keepalive');
         socket.emit('stillalive');
     });
     playerArea = new PlayerArea();

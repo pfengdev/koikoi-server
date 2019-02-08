@@ -33,10 +33,8 @@ var Renderer = function(ctx) {
 
 		Object.keys(that.players).forEach(function(plyrId) {
 			if (that.id === plyrId) {
-				// console.log("registerd current plyr rendrer");
 				that.playerToRenderer[plyrId] = playerRenderer;
 			} else {
-				// console.log("registerd opp plyr renderer");
 				that.playerToRenderer[plyrId] = oppPlayerRenderer;
 			}
 		});
@@ -47,19 +45,16 @@ var Renderer = function(ctx) {
 	    numImagesLoaded++;
 	    if (numImagesLoaded === NUM_ALL_IMAGES) {
 	    	isImagesLoaded = true;
-	    	console.log("done loading");
 	    	render();
 	    }
 	}
 
 	function loadImagesAndRender() {
-		console.log("load images");
 	    that.cardRenderer.loadImages(waitForAllLoadsFinished);
 	    that.backgroundRenderer.loadImages(waitForAllLoadsFinished);
 	}
 
 	var render = function() {
-		console.log("render");
 		if (!isImagesLoaded) {
 			loadImagesAndRender();
 		} else {

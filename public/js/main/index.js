@@ -45,7 +45,7 @@ function init() {
             renderer.render();
         });
         this.socket.on(KEEP_ALIVE, function() {
-            //console.log('received keepalive');
+            console.debug('received keepalive');
             socket.emit('stillalive');
         });
         let ctx = canvas.getContext('2d');
@@ -77,10 +77,7 @@ function updateRenderer(gameState) {
 
 function updatePlayers(gameState) {
     let playerArr = renderer.players;
-    // console.log(playerArr);
-    // console.log(Object.keys(playerArr) === true);
     // if (playerArr !== {}) {
-    //     console.log("update???");
     //     playerArr[id].hand = gameState[HAND];
     //     playerArr[id].pile = gameState[PILE];
     //     playerArr[id].points = gameState[POINTS];
@@ -91,8 +88,6 @@ function updatePlayers(gameState) {
     //         playerArr[other.id].points = other.points;
     //     });
     // } else {
-        // console.log("init");
-        // console.log("id: " + id);
         playerArr[id] = new Player(gameState[HAND], gameState[PILE], gameState[POINTS]);
         gameState[OTHER_PLAYERS].forEach(function(other) {
             playerArr[other.id] = new Player(Array.apply(null, Array(other.handSize)), other.pile, other.points);
